@@ -4,7 +4,7 @@ import warnings
 import cv2
 import numpy as np
 
-from .color_spaces import rgb, rgba
+# from .color_spaces import rgb, rgba
 from . import opt
 from ._utils import typeit, type_decorator
 

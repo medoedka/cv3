@@ -1,40 +1,110 @@
-from functools import partial
 import cv2
-import numpy as np
-from ._utils import type_decorator
+from nptyping import Int, NDArray, Shape
+
 
 __all__ = [
-    'rgb', 'bgr', 'rgb2bgr', 'bgr2rgb',
-    'rgba', 'bgra', 'rgba2bgra', 'bgra2rgba',
-    'rgb2gray',
-    'bgr2gray',
-    'gray2rgb', 'gray2bgr',
-    'gray2rgba', 'gray2bgra',
-    'bgr2hsv',
+    'rgb2bgr',
+    'bgr2rgb',
     'rgb2hsv',
-    'hsv2bgr',
-    'hsv2rgb',
-    'cvt_color', 'cvtColor'
+    'bgr2hsv'
 ]
 
 
-@type_decorator
-def cvt_color(img, code):
-    if code in (cv2.COLOR_GRAY2RGB, cv2.COLOR_GRAY2RGBA):
-        if img.ndim == 3 and img.shape[-1] != 1:
-            raise ValueError('Image must be grayscale (2 dims)')
-    return cv2.cvtColor(img, code=code)
+def rgb2bgr(image: NDArray) -> NDArray:
+    """
+    Transform image from RGB to BGR colorspace.
+
+    Parameters
+    ----------
+        image : numpy.ndarray
+            Image to transform in RGB space.
+
+    Returns
+    -------
+        numpy.ndarray
+            Transformed to BGR image.
+
+    Raises
+    ------
+        ValueError
+            If image is not numpy.ndarray instance
+            or shape does not corresponds to ['W', 'H', 3].
+    """
+    if not isinstance(image, NDArray[Shape["*, *, 3"], Int]):
+        raise ValueError("Image have to be RGB-like numpy.ndarray with shape ['W', 'H', 3] and integer datatype")
+    return cv2.cvtColor(src=image, code=cv2.COLOR_RGB2BGR)
 
 
-rgb2bgr = bgr2rgb = bgr = rgb = partial(cvt_color, code=cv2.COLOR_RGB2BGR)
-rgba2bgra = bgra2rgba = rgba = bgra = partial(cvt_color, code=cv2.COLOR_RGBA2BGRA)
-gray2rgb = gray2bgr = partial(cvt_color, code=cv2.COLOR_GRAY2RGB)
-gray2rgba = gray2bgra = partial(cvt_color, code=cv2.COLOR_GRAY2RGBA)
-bgr2gray = partial(cvt_color, code=cv2.COLOR_BGR2GRAY)
-rgb2gray = partial(cvt_color, code=cv2.COLOR_RGB2GRAY)
-bgr2hsv = partial(cvt_color, code=cv2.COLOR_BGR2HSV)
-rgb2hsv = partial(cvt_color, code=cv2.COLOR_RGB2HSV)
-hsv2bgr = partial(cvt_color, code=cv2.COLOR_HSV2BGR)
-hsv2rgb = partial(cvt_color, code=cv2.COLOR_HSV2RGB)
+def bgr2rgb(image: NDArray) -> NDArray:
+    """
+    Transform image from BGR to RGB colorspace.
 
-cvtColor = cvt_color
+    Parameters
+    ----------
+        image : numpy.ndarray
+            Image to transform in BGR space.
+
+    Returns
+    -------
+        numpy.ndarray
+            Transformed to RGB image.
+
+    Raises
+    ------
+        ValueError
+            If image is not numpy.ndarray instance
+            or shape does not corresponds to ['W', 'H', 3].
+    """
+    if not isinstance(image, NDArray[Shape["*, *, 3"], Int]):
+        raise ValueError("Image have to be BGR-like numpy.ndarray with shape ['W', 'H', 3] and integer datatype")
+    return cv2.cvtColor(src=image, code=cv2.COLOR_RGB2BGR)
+
+
+def rgb2hsv(image: NDArray) -> NDArray:
+    """
+    Transform image from RGB to HSV colorspace.
+
+    Parameters
+    ----------
+        image : numpy.ndarray
+            Image to transform in RGB space.
+
+    Returns
+    -------
+        numpy.ndarray
+            Transformed to HSV image.
+
+    Raises
+    ------
+        ValueError
+            If image is not numpy.ndarray instance
+            or shape does not corresponds to ['W', 'H', 3].
+    """
+    if not isinstance(image, NDArray[Shape["*, *, 3"], Int]):
+        raise ValueError("Image have to be RGB-like numpy.ndarray with shape ['W', 'H', 3] and integer datatype")
+    return cv2.cvtColor(src=image, code=cv2.COLOR_RGB2HSV)
+
+
+def bgr2hsv(image: NDArray) -> NDArray:
+    """
+    Transform image from BGR to HSV colorspace.
+
+    Parameters
+    ----------
+        image : numpy.ndarray
+            Image to transform in BGR space.
+
+    Returns
+    -------
+        numpy.ndarray
+            Transformed to HSV image.
+
+    Raises
+    ------
+        ValueError
+            If image is not numpy.ndarray instance
+            or shape does not corresponds to ['W', 'H', 3].
+    """
+    if not isinstance(image, NDArray[Shape["*, *, 3"], Int]):
+        raise ValueError("Image have to be BGR-like numpy.ndarray with shape ['W', 'H', 3] and integer datatype")
+    return cv2.cvtColor(src=image, code=cv2.COLOR_BGR2HSV)

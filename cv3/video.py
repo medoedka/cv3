@@ -6,7 +6,7 @@ from cv2 import VideoCapture as BaseVideoCapture, VideoWriter as BaseVideoWriter
 from typing import Union
 
 from . import opt
-from .color_spaces import rgb
+# from .color_spaces import rgb
 from ._utils import typeit
 
 __all__ = [
