@@ -11,13 +11,13 @@ from ._utils import type_decorator, _relative_check, _relative_handle, _process_
 from .utils import xywh2xyxy, ccwh2xyxy, yyxx2xyxy
 
 __all__ = [
-    'vflip',
-    'hflip',
-    'dflip',
+    'vertical_flip',
+    'horizontal_flip',
+    'diagonal_flip',
     'transform',
-    'rotate',
-    'rotate90',
-    'rotate180',
+    'rotate_90_left',
+    'rotate_90_right',
+    'rotate_180',
     'rotate270',
     'scale',
     'shift',
@@ -66,24 +66,51 @@ def _color_value_check(color: Optional[Union[int, float, str, Tuple[int, int, in
     return color
 
 
-def vflip(image: NDArray):
+def vertical_flip(image: NDArray) -> NDArray:
     return cv2.flip(src=image, flipCode=0)
 
 
-def hflip(image: NDArray):
+def horizontal_flip(image: NDArray) -> NDArray:
     return cv2.flip(src=image, flipCode=1)
 
 
-def dflip(image: NDArray):
+def diagonal_flip(image: NDArray) -> NDArray:
     return cv2.flip(src=image, flipCode=-1)
 
 
 def transform(image: NDArray,
               angle: float,
-              scale: float,
+              scale: float = 0.0,
               inter: str = 'linear',
               border: str = 'constant',
               value: Optional[Union[int, float, str, Tuple[int, int, int]]] = None) -> NDArray:
+    """
+    Transform original image by rotating and/or scaling,
+    as well as using interpolation techniques and border fillings.
+
+    Parameters
+    ----------
+        image : NDArray
+            Image to transform as numpy.ndarray.
+
+        angle : float
+            Angle of rotation
+
+        scale : float
+            Parameter of scaling the image. Can be interpreted as zoom.
+
+        inter : str
+            Interpolation technique to use.
+            Available at the moment: 'nearest', 'linear', 'area', 'cubic', 'lanczos4'.
+
+        border : str
+            Type of border filling.
+            Available at the moment: 'constant', 'replicate', 'reflect', 'wrap', 'default'.
+
+        value : Optional[Union[int, float, str, Tuple[int, int, int]]]
+            Can be treated as a color for the
+            Default value is None.
+    """
     if not isinstance(value, (str, tuple)):
         warnings.warn(
             'Parameter `value` better use as a string, representing the color\
@@ -110,12 +137,128 @@ def transform(image: NDArray,
     return result
 
 
-def rotate(img, angle, inter=cv2.INTER_LINEAR, border=cv2.BORDER_CONSTANT, value=None):
-    return transform(img, angle, 1, inter=inter, border=border, value=value)
+def rotate_90_left(image: NDArray) -> NDArray:
+    """
+    Rotate the image on 90 degrees counterclockwise (left).
+
+    Parameters
+    ----------
+        image : numpy.ndarray
+            Image to rotate.
+
+    Returns
+    -------
+        numpy.ndarray
+            Rotated image.
+    """
+    return cv2.rotate(src=image, rotateCode=cv2.ROTATE_90_COUNTERCLOCKWISE)
 
 
-def scale(img, factor, inter=cv2.INTER_LINEAR, border=cv2.BORDER_CONSTANT, value=None):
-    return transform(img, 0, factor, inter=inter, border=border, value=value)
+def rotate_90_right(image: NDArray) -> NDArray:
+    """
+    Rotate the image on 90 degrees clockwise (right).
+
+    Parameters
+    ----------
+        image : numpy.ndarray
+            Image to rotate.
+
+    Returns
+    -------
+        numpy.ndarray
+            Rotated image.
+    """
+    return cv2.rotate(src=image, rotateCode=cv2.ROTATE_90_CLOCKWISE)
+
+
+def rotate_180(image: NDArray) -> NDArray:
+    """
+    Rotate the image on 180 degrees.
+
+    Parameters
+    ----------
+        image : numpy.ndarray
+            Image to rotate.
+
+    Returns
+    -------
+        numpy.ndarray
+            Rotated image.
+    """
+    return cv2.rotate(src=image, rotateCode=cv2.ROTATE_180)
+
+
+def rotate(image: NDArray,
+           angle: float,
+           inter: str = 'linear',
+           border: str = 'constant',
+           value=None) -> NDArray:
+    """
+    Rotate the image on arbitrary degrees clockwise (right).
+
+    Parameters
+    ----------
+        image: numpy.ndarray
+            Image to rotate.
+
+        angle : float
+            Angle of rotation
+
+        inter : str
+            Interpolation technique to use.
+            Available at the moment: 'nearest', 'linear', 'area', 'cubic', 'lanczos4'.
+
+        border : str
+            Type of border filling.
+            Available at the moment: 'constant', 'replicate', 'reflect', 'wrap', 'default'.
+
+        value : Optional[Union[int, float, str, Tuple[int, int, int]]]
+            Can be treated as a color for the
+            Default value is None.
+
+    Returns
+    -------
+        numpy.ndarray
+            Rotated image.
+    """
+    return transform(image=image, angle=angle, scale=1, inter=inter, border=border, value=value)
+
+
+def scale(image: NDArray,
+          scale: float,
+          inter: str = 'linear',
+          border: str = 'constant',
+          value=None) -> NDArray:
+    """
+    Scale the image on arbitrary factor.
+
+    Parameters
+    ----------
+        image: numpy.ndarray
+            Image to rotate.
+
+        scale : float
+            Parameter of scaling the image. Can be interpreted as zoom.
+
+        inter : str
+            Interpolation technique to use.
+            Available at the moment: 'nearest', 'linear', 'area', 'cubic', 'lanczos4'.
+
+        border : str
+            Type of border filling.
+            Available at the moment: 'constant', 'replicate', 'reflect', 'wrap', 'default'.
+
+        value : Optional[Union[int, float, str, Tuple[int, int, int]]]
+            Can be treated as a color for the
+            Default value is None.
+
+    Returns
+    -------
+        numpy.ndarray
+            Scaled image.
+    """
+    return transform(image=image, angle=0, scale=scale, inter=inter, border=border, value=value)
+
 
 @type_decorator
 def shift(img, x, y, border=cv2.BORDER_CONSTANT, value=None, rel=None):
@@ -179,7 +322,4 @@ def pad(img, y0, y1, x0, x1, border=cv2.BORDER_CONSTANT, value=None, rel=None):
 translate = shift
 xtranslate = xshift
 ytranslate = yshift
-rotate90 = partial(rotate, angle=90)
-rotate180 = partial(rotate, angle=180)
-rotate270 = partial(rotate, angle=270)
 copyMakeBorder = pad
