@@ -1,24 +1,20 @@
-# cv3: Pythonic OpenCV to speed up your computer vision research
+# cv3: pythonic interface to OpenCV
 
-## Principles
-- Solve more important tasks than writing extra code
-- You are programming in python, not C++
-- OpenCV is not scary
+### Principles
+- Meaningful namings
+- Reduce unnecessary boilerplates
+- Understandable documentation
 
-## Features
+### Demonstartion
 You can get acquainted with the features in [demo.ipynb](https://github.com/gorodion/pycv/blob/main/demo.ipynb)
-- Forget to remember extra parameters. To draw a square you don't need to know color and thickness. 
-- Forget to type everything. You can pass float/pathlib.Path arguments where cv2 doesn't allow
-- Forget to copy the same code over and over (like cv2.getRotationMatrix2D or cv2.VideoWriter_fourcc(*'MP4V'))
+
 
 ## Quick start
 `pip install git+https://github.com/gorodion/pycv.git`
-
-[demo.ipynb](https://github.com/gorodion/pycv/blob/main/demo.ipynb)
 
 ## Run tests
 ```python
 pytest -v
 ```
 ---
-I hope this is helpful, please contribute 🙂
+This is a fork from [this repository](https://github.com/gorodion/pycv), since I have slightly different view on how it should be written. Do not hesitate to contribute, open issues, suggest any improvements you consider reasonable!
