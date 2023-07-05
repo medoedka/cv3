@@ -4,7 +4,7 @@ import warnings
 import cv2
 import numpy as np
 
-# from .color_spaces import rgb, rgba
+from .color_spaces import bgr2rgb
 from . import opt
 from ._utils import typeit, type_decorator
 
@@ -63,9 +63,10 @@ def imread(img_path, flag=cv2.IMREAD_COLOR):
         return img
     if opt.RGB:
         if img.shape[-1] == 4:
-            img = rgba(img)
+            # img = rgba(img)
+            pass
         else:
-            img = rgb(img)
+            img = bgr2rgb(img)
     return img
 
 

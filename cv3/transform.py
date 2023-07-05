@@ -1,14 +1,12 @@
+import warnings
+from typing import Tuple, Optional, Union, TypeAlias
+
 import cv2
 import numpy as np
-from functools import partial
-import warnings
-from nptyping import Int, NDArray, Shape
-from typing import Tuple, Optional, Union
+from nptyping import NDArray
+
 from ._utils import COLORS_RGB_DICT
-
-
-from ._utils import type_decorator, _relative_check, _relative_handle, _process_color, _handle_rect_coords
-from .utils import xywh2xyxy, ccwh2xyxy, yyxx2xyxy
+from ._utils import type_decorator, _relative_check, _relative_handle, _handle_rect_coords
 
 __all__ = [
     'vertical_flip',
@@ -18,10 +16,8 @@ __all__ = [
     'rotate_90_left',
     'rotate_90_right',
     'rotate_180',
-    'rotate270',
     'scale',
     'shift',
-    'translate',
     'xshift',
     'xtranslate',
     'yshift',
@@ -32,8 +28,24 @@ __all__ = [
     'copyMakeBorder'
 ]
 
+InterpolationType: TypeAlias = int
+PaddingType: TypeAlias = int
 
-def _inter_flag_match(flag: str):
+
+def _inter_flag_match(flag: str) -> InterpolationType:
+    """
+    Matches string interpolation flag to cv2 interpolation attribute.
+
+    Parameters
+    ----------
+        flag : str
+            Flag to match with the existing cv2 interpolation attribute.
+
+    Returns
+    -------
+        InterpolationType
+            cv2 interpolation attribute.
+    """
     inter_mapping = {
         'nearest': cv2.INTER_NEAREST,
         'linear': cv2.INTER_LINEAR,
@@ -46,7 +58,25 @@ def _inter_flag_match(flag: str):
     return inter_mapping[flag]
 
 
-def _border_flag_match(flag: str):
+def _border_flag_match(flag: str) -> PaddingType:
+    """
+    Matches string border type flag to cv2 border attribute.
+
+    Parameters
+    ----------
+        flag : str
+            Flag to match with the existing cv2 border attribute.
+
+    Returns
+    -------
+        PaddingType
+            cv2 border attribute.
+
+    Raises
+    ------
+        ValueError
+            If `border` does not contains in the mapping dict.
+    """
     border_mapping = {
         'constant': cv2.BORDER_CONSTANT,
         'replicate': cv2.BORDER_REPLICATE,
@@ -67,20 +97,56 @@ def _color_value_check(color: Optional[Union[int, float, str, Tuple[int, int, in
 
 
 def vertical_flip(image: NDArray) -> NDArray:
+    """
+    Flip the image along x-axis.
+
+    Parameters
+    ----------
+        image : numpy.ndarray
+            Image to flip.
+
+    Returns
+    -------
+        Flipped image.
+    """
     return cv2.flip(src=image, flipCode=0)
 
 
 def horizontal_flip(image: NDArray) -> NDArray:
+    """
+    Flip the image along y-axis.
+
+    Parameters
+    ----------
+        image : numpy.ndarray
+            Image to flip.
+
+    Returns
+    -------
+        Flipped image.
+    """
     return cv2.flip(src=image, flipCode=1)
 
 
 def diagonal_flip(image: NDArray) -> NDArray:
+    """
+    Flip the image along its diagonal.
+
+    Parameters
+    ----------
+        image : numpy.ndarray
+            Image to flip.
+
+    Returns
+    -------
+        Flipped image.
+    """
     return cv2.flip(src=image, flipCode=-1)
 
 
 def transform(image: NDArray,
-              angle: float,
-              scale: float = 0.0,
+              angle: Union[float, int],
+              scale: Union[float, int] = 0.0,
               inter: str = 'linear',
               border: str = 'constant',
               value: Optional[Union[int, float, str, Tuple[int, int, int]]] = None) -> NDArray:
@@ -93,10 +159,10 @@ def transform(image: NDArray,
         image : NDArray
             Image to transform as numpy.ndarray.
 
-        angle : float
+        angle : Union[float, int]
             Angle of rotation
 
-        scale : float
+        scale : Union[float, int]
             Parameter of scaling the image. Can be interpreted as zoom.
 
         inter : str
@@ -189,10 +255,10 @@ def rotate_180(image: NDArray) -> NDArray:
 
 
 def rotate(image: NDArray,
-           angle: float,
+           angle: Union[float, int],
            inter: str = 'linear',
            border: str = 'constant',
-           value=None) -> NDArray:
+           value: Optional[Union[int, float, str, Tuple[int, int, int]]] = None) -> NDArray:
     """
     Rotate the image on arbitrary degrees clockwise (right).
 
@@ -201,7 +267,7 @@ def rotate(image: NDArray,
         image: numpy.ndarray
             Image to rotate.
 
-        angle : float
+        angle : Union[float, int]
             Angle of rotation
 
         inter : str
@@ -225,10 +291,10 @@ def rotate(image: NDArray,
 
 
 def scale(image: NDArray,
-          scale: float,
+          scale: Union[float, int],
           inter: str = 'linear',
           border: str = 'constant',
-          value=None) -> NDArray:
+          value: Optional[Union[int, float, str, Tuple[int, int, int]]] = None) -> NDArray:
     """
     Scale the image on arbitrary factor.
 
@@ -237,7 +303,7 @@ def scale(image: NDArray,
         image: numpy.ndarray
             Image to rotate.
 
-        scale : float
+        scale : Union[float, int]
             Parameter of scaling the image. Can be interpreted as zoom.
 
         inter : str
@@ -260,13 +326,55 @@ def scale(image: NDArray,
     return transform(image=image, angle=0, scale=scale, inter=inter, border=border, value=value)
 
 
-@type_decorator
-def shift(img, x, y, border=cv2.BORDER_CONSTANT, value=None, rel=None):
-    x, y = _relative_handle(img, x, y, rel=rel)
-    transMat = np.float32([[1, 0, x], [0, 1, y]])
-    dimensions = (img.shape[1], img.shape[0])
-    border, value = _border_value_check(border, value)
-    return cv2.warpAffine(img, transMat, dimensions, borderMode=border, borderValue=value)
+def shift(image: NDArray,
+          x: Union[float, int],
+          y: Union[float, int],
+          border: str = 'constant',
+          value: Optional[Union[int, float, str, Tuple[int, int, int]]] = None) -> NDArray:
+    """
+    Shift the image along x and y axes. You can treat `x` and `y` parameters
+    as new coordinates of the image relative to the cuurent ones.
+    As a reminder: image coordinates starts at (0,0) point which is upper left corner.
+
+    Parameters
+    ----------
+        image: numpy.ndarray
+            Image to shift.
+
+        x : Union[float, int]
+            Parameter of shifting x coordinate of the image.
+
+        y : Union[float, int]
+            Parameter of shifting y coordinate of the image.
+
+        border : str
+            Type of border filling.
+            Available at the moment: 'constant', 'replicate', 'reflect', 'wrap', 'default'.
+
+        value : Optional[Union[int, float, str, Tuple[int, int, int]]]
+            Can be treated as a color for the
+            Default value is None.
+
+    Returns
+    -------
+        numpy.ndarray
+            Scaled image.
+    """
+    translation_matrix = np.array(
+        [[1, 0, x],
+         [0, 1, y]]
+    ).astype(np.float32)
+    dimensions = (image.shape[1], image.shape[0])
+    border_mapped = _border_flag_match(border)
+    valid_value = _color_value_check(value)
+    translated_image = cv2.warpAffine(
+        src=image,
+        M=translation_matrix,
+        dsize=dimensions,
+        borderMode=border_mapped,
+        borderValue=valid_value
+    )
+    return translated_image
 
 
 def xshift(img, x, border=cv2.BORDER_CONSTANT, value=None, rel=None):
@@ -319,7 +427,6 @@ def pad(img, y0, y1, x0, x1, border=cv2.BORDER_CONSTANT, value=None, rel=None):
     return cv2.copyMakeBorder(img, y0, y1, x0, x1, borderType=border, value=value)
 
 
-translate = shift
 xtranslate = xshift
 ytranslate = yshift
 copyMakeBorder = pad
