@@ -1,7 +1,9 @@
-import cv2
 import warnings
+from typing import List, Tuple, Union
+
+import cv2
 import numpy as np
-from typing import List
+from nptyping import NDArray
 
 from . import opt
 from ._utils import (
@@ -9,7 +11,6 @@ from ._utils import (
     _relative_check,
     _relative_handle,
     _process_color,
-    _handle_rect_coords,
     COLORS_RGB_DICT
 )
 
@@ -20,43 +21,45 @@ __all__ = [
     'circle',
     'point',
     'points',
-    'line', 'hline', 'vline',
-    'text', 'putText',
+    'line',
+    'hline',
+    'vline',
+    'text',
+    'putText',
     'rectangles',
     'COLORS'
 ]
 
 COLORS = list(COLORS_RGB_DICT)
 
-_LINE_TYPE_DICT = {
-    'filled': cv2.FILLED,
-    'line_4': cv2.LINE_4,
-    'line_8': cv2.LINE_8,
-    'line_aa': cv2.LINE_AA
-}
 
-
-def _line_type_flag_match(flag):
-    assert flag in _LINE_TYPE_DICT, f'no such flag: "{flag}". Available: {", ".join(_LINE_TYPE_DICT.keys())}'
-    return _LINE_TYPE_DICT[flag]
-
-
-_FONTS_DICT = {
-    'simplex': cv2.FONT_HERSHEY_SIMPLEX,
-    'plain': cv2.FONT_HERSHEY_PLAIN,
-    'duplex': cv2.FONT_HERSHEY_DUPLEX,
-    'complex': cv2.FONT_HERSHEY_COMPLEX,
-    'triplex': cv2.FONT_HERSHEY_TRIPLEX,
-    'complex_small': cv2.FONT_HERSHEY_COMPLEX_SMALL,
-    'script_simplex': cv2.FONT_HERSHEY_SCRIPT_SIMPLEX,
-    'script_complex': cv2.FONT_HERSHEY_SCRIPT_COMPLEX,
-    'italic': cv2.FONT_ITALIC
-}
+def _line_type_flag_match(flag: str) -> int:
+    line_types_mapping = {
+        'filled': cv2.FILLED,
+        'line_4': cv2.LINE_4,
+        'line_8': cv2.LINE_8,
+        'line_aa': cv2.LINE_AA
+    }
+    if flag not in line_types_mapping.keys() or not isinstance(flag, str):
+        raise ValueError(f'Parameter `line` has to be a string from: {list(line_types_mapping.keys())}')
+    return line_types_mapping[flag]
 
 
 def _font_flag_match(flag):
-    assert flag in _FONTS_DICT, f'no such flag: "{flag}". Available: {", ".join(_FONTS_DICT.keys())}'
-    return _FONTS_DICT[flag]
+    fonts_mapping = {
+        'simplex': cv2.FONT_HERSHEY_SIMPLEX,
+        'plain': cv2.FONT_HERSHEY_PLAIN,
+        'duplex': cv2.FONT_HERSHEY_DUPLEX,
+        'complex': cv2.FONT_HERSHEY_COMPLEX,
+        'triplex': cv2.FONT_HERSHEY_TRIPLEX,
+        'complex_small': cv2.FONT_HERSHEY_COMPLEX_SMALL,
+        'script_simplex': cv2.FONT_HERSHEY_SCRIPT_SIMPLEX,
+        'script_complex': cv2.FONT_HERSHEY_SCRIPT_COMPLEX,
+        'italic': cv2.FONT_ITALIC
+    }
+    if flag not in fonts_mapping.keys() or not isinstance(flag, str):
+        raise ValueError(f'Parameter `font` has to be a string from: {list(fonts_mapping.keys())}')
+    return fonts_mapping[flag]
 
 
 def _draw_decorator(func):
@@ -65,7 +68,6 @@ def _draw_decorator(func):
         if copy:
             img = img.copy()
 
-        color = _process_color(color)
 
         if isinstance(line_type, str):
             line_type = _line_type_flag_match(line_type)
@@ -76,13 +78,42 @@ def _draw_decorator(func):
 
     return wrapper
 
-# TODO filled=False
-@_draw_decorator
-def rectangle(img, x0, y0, x1, y1, mode='xyxy', rel=None, **kwargs):
-    x0, y0, x1, y1 = _handle_rect_coords(img, x0, y0, x1, y1, mode=mode, rel=rel)
 
-    cv2.rectangle(img, (x0, y0), (x1, y1), kwargs['color'], kwargs['t'], lineType=kwargs['line_type'])
-    return img
+def rectangle(
+        image: NDArray,
+        vertex1: Tuple[int, int],
+        vertex2: Tuple[int, int],
+        color: Union[str, Tuple[int, int, int]] = (0, 0, 0),
+        thickness: int = 1,
+        line_type: str = 'filled',
+        fill: bool = False) -> NDArray:
+    if isinstance(color, str):
+        if color not in COLORS_RGB_DICT.keys():
+            raise ValueError(f'Parameter `color` has to be string from {list(COLORS_RGB_DICT.keys())} or tuple with integers')
+        color = COLORS_RGB_DICT[color]
+    elif isinstance(color, tuple):
+        if len(color) != 3:
+            raise ValueError(f'Parameter `color` has to be string or tuple with 3 integers in range [0, 255]')
+        elif not isinstance(color[0], int) or not isinstance(color[1], int) or not isinstance(color[2], int):
+            raise ValueError(f'Parameter `color` has to be string or tuple with 3 integers in range [0, 255]')
+        elif (color[0] < 0 or color[0] > 255) or (color[1] < 0 or color[1] > 255) or (color[2] < 0 or color[2] > 255):
+            raise ValueError(f'Parameter `color` has to be string or tuple with 3 integers in range [0, 255]')
+    if not isinstance(thickness, int):
+        raise ValueError('Parameter `thickness` has to be positive integer')
+    if thickness < 0:
+        raise ValueError('Parameter `thickness` has to be positive integer')
+    line_type_processed = _line_type_flag_match(line_type)
+    if fill:
+        thickness = -1
+        line_type_processed = None
+    cv2.rectangle(
+        img=image,
+        pt1=vertex1,
+        pt2=vertex2,
+        color=color,
+        thickness=thickness,
+        lineType=line_type_processed)
+    return image
 
 
 def _handle_poly_pts(img, pts, rel=None):

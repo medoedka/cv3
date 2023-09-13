@@ -1,7 +1,6 @@
 import cv2
 from nptyping import Int, NDArray, Shape
 
-
 __all__ = [
     'rgb2bgr',
     'bgr2rgb',
@@ -55,7 +54,7 @@ def bgr2rgb(image: NDArray) -> NDArray:
             If image is not numpy.ndarray instance
             or shape does not corresponds to ['W', 'H', 3].
     """
-    if not isinstance(image, NDArray[Shape["*, *, 3"], Int]):
+    if not isinstance(image, NDArray[Shape["*, *, 3"], Any]):
         raise ValueError("Image have to be BGR-like numpy.ndarray with shape ['W', 'H', 3] and integer datatype")
     return cv2.cvtColor(src=image, code=cv2.COLOR_RGB2BGR)
 
