@@ -11,6 +11,7 @@ from ._utils import (
     _relative_check,
     _relative_handle,
     _process_color,
+    _process_thickness,
     COLORS_RGB_DICT
 )
 
@@ -68,7 +69,6 @@ def _draw_decorator(func):
         if copy:
             img = img.copy()
 
-
         if isinstance(line_type, str):
             line_type = _line_type_flag_match(line_type)
 
@@ -85,27 +85,13 @@ def rectangle(
         vertex2: Tuple[int, int],
         color: Union[str, Tuple[int, int, int]] = (0, 0, 0),
         thickness: int = 1,
-        line_type: str = 'filled',
+        line_type: str = 'line_8',
         fill: bool = False) -> NDArray:
-    if isinstance(color, str):
-        if color not in COLORS_RGB_DICT.keys():
-            raise ValueError(f'Parameter `color` has to be string from {list(COLORS_RGB_DICT.keys())} or tuple with integers')
-        color = COLORS_RGB_DICT[color]
-    elif isinstance(color, tuple):
-        if len(color) != 3:
-            raise ValueError(f'Parameter `color` has to be string or tuple with 3 integers in range [0, 255]')
-        elif not isinstance(color[0], int) or not isinstance(color[1], int) or not isinstance(color[2], int):
-            raise ValueError(f'Parameter `color` has to be string or tuple with 3 integers in range [0, 255]')
-        elif (color[0] < 0 or color[0] > 255) or (color[1] < 0 or color[1] > 255) or (color[2] < 0 or color[2] > 255):
-            raise ValueError(f'Parameter `color` has to be string or tuple with 3 integers in range [0, 255]')
-    if not isinstance(thickness, int):
-        raise ValueError('Parameter `thickness` has to be positive integer')
-    if thickness < 0:
-        raise ValueError('Parameter `thickness` has to be positive integer')
+    color = _process_color(color)
+    thickness = _process_thickness(thickness)
     line_type_processed = _line_type_flag_match(line_type)
     if fill:
         thickness = -1
-        line_type_processed = None
     cv2.rectangle(
         img=image,
         pt1=vertex1,
@@ -121,6 +107,7 @@ def _handle_poly_pts(img, pts, rel=None):
     pts = _relative_handle(img, *pts, rel=rel)
     pts = np.int32(pts).reshape(-1, 1, 2)
     return pts
+
 
 @_draw_decorator
 def polylines(img, pts, is_closed=False, rel=None, **kwargs):

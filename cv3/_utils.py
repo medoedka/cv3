@@ -22,30 +22,26 @@ def type_decorator(func):
 
 
 def _process_color(color):
-    if color is None:
-        color = opt.COLOR
     if isinstance(color, str):
-        assert color in COLORS_RGB_DICT, f'No such color: {color}. Available colors: {list(COLORS_RGB_DICT.keys())}'
+        if color not in COLORS_RGB_DICT.keys():
+            raise ValueError(f'Parameter `color` has to be string from {list(COLORS_RGB_DICT.keys())} or tuple with integers')
         color = COLORS_RGB_DICT[color]
-        if not opt.RGB:
-            color = color[::-1]
-    if isinstance(color, (int, np.unsignedinteger, float, np.floating)):
-        assert 0 <= color <= 255, 'if `color` passed as number it should be in range [0, 255]'
-        if isinstance(color, (int, np.unsignedinteger)):
-            color = int(color), 0, 0
-        if isinstance(color, (float, np.floating)):
-            color = color, 0., 0.
-    if isinstance(color, np.ndarray):
-        color = color.ravel().tolist()
-    if isinstance(color, (list, tuple)):
-        if all(0 <= x <= 1 and isinstance(x, (float, np.floating)) for x in color):
-            color = tuple(round(c*255) for c in color)
-        else:
-            assert all(0 <= c <= 255 for c in color), '`color` must be in range [0, 255]'
-            color = tuple(map(round, color))
-    else:
-        raise ValueError('Unexpected type of `color` arg (int, float, str, np.array, list, tuple supported)')
+    elif isinstance(color, tuple):
+        if len(color) != 3:
+            raise ValueError(f'Parameter `color` has to be string or tuple with 3 integers in range [0, 255]')
+        elif not isinstance(color[0], int) or not isinstance(color[1], int) or not isinstance(color[2], int):
+            raise ValueError(f'Parameter `color` has to be string or tuple with 3 integers in range [0, 255]')
+        elif (color[0] < 0 or color[0] > 255) or (color[1] < 0 or color[1] > 255) or (color[2] < 0 or color[2] > 255):
+            raise ValueError(f'Parameter `color` has to be string or tuple with 3 integers in range [0, 255]')
     return color
+
+
+def _process_thickness(thickness):
+    if not isinstance(thickness, int):
+        raise ValueError('Parameter `thickness` has to be positive integer')
+    if thickness < 0:
+        raise ValueError('Parameter `thickness` has to be positive integer')
+    return thickness
 
 
 def _relative_check(*args, rel):
